@@ -14,8 +14,12 @@ The app.py script does several things:
 import argparse
 import logging
 
-# Imports needed for Clams and MMIF.
-# Non-NLP Clams applications will require AnnotationTypes
+from clams.app import ClamsApp
+from clams.appmetadata import AppMetadata
+from clams.restify import Restifier
+import re
+import json
+from mmif import Mmif, Annotation, DocumentTypes, AnnotationTypes
 
 from clams import ClamsApp, Restifier
 from mmif import Mmif, View, Annotation, Document, AnnotationTypes, DocumentTypes
@@ -30,14 +34,81 @@ class DatimexExtraction(ClamsApp):
         super().__init__()
 
     def _appmetadata(self):
-        # see https://sdk.clams.ai/autodoc/clams.app.html#clams.app.ClamsApp._load_appmetadata
-        # Also check out ``metadata.py`` in this directory.
-        # When using the ``metadata.py`` leave this do-nothing "pass" method here.
-        pass
+        metadata = AppMetadata(
+            name="DatimexExtraction",
+            description="Extracts date and time expressions from raw text input.",
+            app_version="1.0.0",
+            app_license="Apache 2.0"
+        )
+        metadata.add_input(DocumentTypes.TextDocument)
+        metadata.add_output(AnnotationTypes.TimeExpression)
+        metadata.add_parameter(
+            name="regex",
+            description="Custom regex pattern for extracting date/time.",
+            type="string",
+            default=""
+        )
+        return metadata
 
     def _annotate(self, mmif: Mmif, **parameters) -> Mmif:
         # see https://sdk.clams.ai/autodoc/clams.app.html#clams.app.ClamsApp._annotate
-        raise NotImplementedError
+
+        if isinstance(mmif, str):
+            mmif = Mmif(mmif)
+        
+        regex_pattern = parameters.get("regex", "")
+        if regex_pattern:
+            try:
+                re.compile(regex_pattern)
+            except re.error as e:
+                raise ValueError(f"Invalid regex pattern provided: {regex_pattern}. Error: {e}")
+
+        default_pattern = r'(\d{1,2}[-/]\d{1,2}[-/]\d{2,4}|\d{1,2} \w+ \d{4}|\d{4}-\d{2}-\d{2}|\w+ \d{1,2}, \d{4})'
+        pattern = regex_pattern if regex_pattern else default_pattern
+
+        
+        new_view = mmif.new_view()
+        self.sign_view(new_view, parameters)
+
+        document_found = False
+        for doc in mmif.get_documents_by_type(DocumentTypes.TextDocument):
+            document_found = True
+            text = doc.text
+            for match in re.finditer(pattern, text):
+                start, end = match.span()
+
+                
+                extracted_date = match.group()
+
+                
+                try:
+                    if re.match(r'(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})', extracted_date): # If the date is in 'DD/MM/YYYY' or 'DD-MM-YYYY' format
+                        date_obj = datetime.strptime(extracted_date, '%d/%m/%Y') if '/' in extracted_date else datetime.strptime(extracted_date, '%d-%m-%Y')
+
+                    elif re.match(r'(\d{4}-\d{2}-\d{2})', extracted_date):# If the date is in 'YYYY-MM-DD' format
+                        date_obj = datetime.strptime(extracted_date, '%Y-%m-%d')
+                   
+                    elif re.match(r'(\w+ \d{1,2}, \d{4})', extracted_date):  # If the date is in 'Month DD, YYYY' format
+                        date_obj = datetime.strptime(extracted_date, '%B %d, %Y')
+                    
+                    else:   # If the date is in 'MM-DD-YYYY' format
+                        date_obj = datetime.strptime(extracted_date, '%m-%d-%Y')
+
+                    formatted_date = date_obj.strftime('%Y-%m-%d')  # Convert to 'YYYY-MM-DD' format
+
+                except ValueError as e:
+                    raise ValueError(f"Error converting date '{extracted_date}' to the desired format. Error: {e}")
+
+                annotation = new_view.new_annotation()
+                annotation.start = start
+                annotation.end = end
+                annotation.add_property("text", formatted_date)
+                annotation.attype = AnnotationTypes.DateExpression
+
+        if not document_found:
+            raise ValueError("No TextDocument found in the provided MMIF.")
+
+        return mmif
 
 def get_app():
     """
@@ -45,9 +116,7 @@ def get_app():
     external information such as initial app configuration should be set without using function arguments. The easiest
     way to do this is to set global variables before calling this.
     """
-    # for example:
-    # return DatimexExtraction(create, from, global, params)
-    raise NotImplementedError
+    return DatimexExtraction()
 
 
 if __name__ == "__main__":
