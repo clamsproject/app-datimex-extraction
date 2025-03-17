@@ -4,6 +4,7 @@ The purpose of this file is to define the metadata of the app with minimal impor
 DO NOT CHANGE the name of the file
 """
 import pathlib
+import re
 
 from mmif import DocumentTypes, AnnotationTypes
 
@@ -25,10 +26,10 @@ def appmetadata() -> AppMetadata:
     # first set up some basic information
     metadata = AppMetadata(
         name="Datimex Extraction",
-        description="",  # briefly describe what the purpose and features of the app
-        app_license="",  # short name for a software license like MIT, Apache2, GPL, etc.
+        description="Extracts date expressions from text documents and normalizes them.",
+        app_license="MIT",  # short name for a software license like MIT, Apache2, GPL, etc.
         identifier="datimex-extraction",  # should be a single string without whitespaces. If you don't intent to publish this app to the CLAMS app-directory, please use a full IRI format.
-        url="https://fakegithub.com/some/repository",  # a website where the source code and full documentation of the app is hosted
+        url="https://github.com/clamsproject/app-datimex-extraction",
         # (if you are on the CLAMS team, this MUST be "https://github.com/clamsproject/app-datimex-extraction"
         # (see ``.github/README.md`` file in this directory for the reason)
         analyzer_version='version_X', # use this IF THIS APP IS A WRAPPER of an existing computational analysis algorithm
@@ -42,15 +43,15 @@ def appmetadata() -> AppMetadata:
     )
     # and then add I/O specifications: an app must have at least one input and one output
     metadata.add_input(DocumentTypes.Document)
-    metadata.add_output(AnnotationTypes.Thing, typeSpecificProperty='property-value')
+    metadata.add_output(AnnotationTypes.NamedEntity, typeSpecificProperty='category=DATE')
     
     # (optional) and finally add runtime parameter specifications
-    metadata.add_parameter(name='a_param', description='example parameter description',
-                           type='boolean', default='false')
+   # metadata.add_parameter(name='a_param', description='example parameter description',
+    #                       type='boolean', default='false')
     # metadta.add_parameter(more...)
     
     # CHANGE this line and make sure return the compiled `metadata` instance
-    return None
+    return  metadata
 
 
 # DO NOT CHANGE the main block
