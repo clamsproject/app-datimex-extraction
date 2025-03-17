@@ -20,6 +20,7 @@ from clams.restify import Restifier
 import re
 import json
 from mmif import Mmif, Annotation, DocumentTypes, AnnotationTypes
+from metadata import get_metadata
 
 from clams import ClamsApp, Restifier
 from mmif import Mmif, View, Annotation, Document, AnnotationTypes, DocumentTypes
@@ -34,21 +35,7 @@ class DatimexExtraction(ClamsApp):
         super().__init__()
 
     def _appmetadata(self):
-        metadata = AppMetadata(
-            name="DatimexExtraction",
-            description="Extracts date and time expressions from raw text input.",
-            app_version="1.0.0",
-            app_license="Apache 2.0"
-        )
-        metadata.add_input(DocumentTypes.TextDocument)
-        metadata.add_output(AnnotationTypes.TimeExpression)
-        metadata.add_parameter(
-            name="regex",
-            description="Custom regex pattern for extracting date/time.",
-            type="string",
-            default=""
-        )
-        return metadata
+        return get_metadata()
 
     def _annotate(self, mmif: Mmif, **parameters) -> Mmif:
         # see https://sdk.clams.ai/autodoc/clams.app.html#clams.app.ClamsApp._annotate
@@ -99,11 +86,12 @@ class DatimexExtraction(ClamsApp):
                 except ValueError as e:
                     raise ValueError(f"Error converting date '{extracted_date}' to the desired format. Error: {e}")
 
-                annotation = new_view.new_annotation()
+                annotation = new_view.new_annotation("http://vocab.lappsgrid.org/NamedEntity")
                 annotation.start = start
                 annotation.end = end
                 annotation.add_property("text", formatted_date)
-                annotation.attype = AnnotationTypes.DateExpression
+                annotation.add_property("category", "DATE")
+
 
         if not document_found:
             raise ValueError("No TextDocument found in the provided MMIF.")
