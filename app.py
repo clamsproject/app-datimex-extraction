@@ -13,7 +13,7 @@ The app.py script does several things:
 
 import argparse
 import logging
-
+from datetime import datetime
 from clams.app import ClamsApp
 from clams.appmetadata import AppMetadata
 from clams.restify import Restifier
@@ -35,7 +35,7 @@ class DatimexExtraction(ClamsApp):
         super().__init__()
 
     def _appmetadata(self):
-        return get_metadata()
+        pass
 
     def _annotate(self, mmif: Mmif, **parameters) -> Mmif:
         # see https://sdk.clams.ai/autodoc/clams.app.html#clams.app.ClamsApp._annotate
