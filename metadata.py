@@ -38,8 +38,7 @@ def appmetadata() -> AppMetadata:
         # (but, when the app doesn't implementaion any additional algorithms/model/architecture, but simply use API's of existing, for exmaple, OCR software, it is a wrapper)
         # if the analyzer is a python app, and it's specified in the requirements.txt
         # this trick can also be useful (replace ANALYZER_NAME with the pypi dist name)
-        analyzer_version=[l.strip().rsplit('==')[-1] for l in open(pathlib.Path(__file__).parent / 'requirements.txt').readlines() if re.match(r'^ANALYZER_NAME==', l)][0],
-        analyzer_license="",  # short name for a software license
+        
     )
     # and then add I/O specifications: an app must have at least one input and one output
     metadata.add_input(DocumentTypes.Document)
