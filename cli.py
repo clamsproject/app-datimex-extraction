@@ -28,17 +28,22 @@ def metadata_to_argparser(app_metadata: AppMetadata) -> argparse.ArgumentParser:
     for parameter in app_metadata.parameters:
         if parameter.multivalued:
             a = parser.add_argument(
-                f"--{parameter.name}",
-                help=parameter.description,
-                nargs='+',
-                action='extend',
-                type=str
+                "--input_video", 
+                type=str, 
+                default="/app/videos/default_video.mp4", 
+                help="Path to the input video file (default: /app/videos/default_video.mp4)"
+                #f"--{parameter.name}",
+                #help=parameter.description,
+                #nargs='+',
+               # action='extend',
+                #type=str
+                
             )
         else:
             a = parser.add_argument(
                 f"--{parameter.name}",
                 help=parameter.description,
-                nargs=1,
+                #nargs=1,
                 action="store",
                 type=str)
         if parameter.choices is not None:
