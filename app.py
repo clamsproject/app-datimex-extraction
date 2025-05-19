@@ -14,13 +14,15 @@ The app.py script does several things:
 import argparse
 import logging
 import re
+from typing import Union
+from datetime import datetime
 
 # Imports needed for Clams and MMIF.
 # Non-NLP Clams applications will require AnnotationTypes
 
 from clams import ClamsApp, Restifier
 from mmif import Mmif, View, Annotation, Document, AnnotationTypes, DocumentTypes
-from mmif.utils import generate_uuid
+#from mmif.utils import generate_uuid
 from metadata import appmetadata
 # For an NLP tool we need to import the LAPPS vocabulary items
 from lapps.discriminators import Uri
@@ -62,7 +64,7 @@ class DatimexExtraction(ClamsApp):
                 if normalized is None:
                     self.logger.warning(f"Could not normalize date: {raw_date}")
                     continue
-                ann = new_view.new_annotation(AnnotationTypes.Annotation, start=start, end=end)
+                ann = new_view.new_annotation(Uri.NE, start=start, end=end)
                 ann.add_property("document", doc.id)
                 ann.add_property("text", raw_date)
                 ann.add_property("normalized_date", normalized)
@@ -72,7 +74,7 @@ class DatimexExtraction(ClamsApp):
         # see https://sdk.clams.ai/autodoc/clams.app.html#clams.app.ClamsApp._annotate
         #raise NotImplementedError
 
-def normalize_date(self, raw_date: str) -> str | None:
+    def normalize_date(self, raw_date: str) -> Union[str, None]:
         formats = [
             '%d/%m/%Y', '%m/%d/%Y', '%Y-%m-%d', '%d-%m-%Y', '%m-%d-%Y',
             '%B %d, %Y', '%d %B %Y'

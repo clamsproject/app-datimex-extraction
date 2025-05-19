@@ -6,7 +6,7 @@ DO NOT CHANGE the name of the file
 import pathlib
 import re
 from mmif import DocumentTypes, AnnotationTypes
-
+from lapps.discriminators import Uri
 from clams.app import ClamsApp
 from clams.appmetadata import AppMetadata
 
@@ -31,18 +31,18 @@ def appmetadata() -> AppMetadata:
         url="https://fakegithub.com/some/repository",  # a website where the source code and full documentation of the app is hosted
         # (if you are on the CLAMS team, this MUST be "https://github.com/clamsproject/app-datimex-extraction"
         # (see ``.github/README.md`` file in this directory for the reason)
-        analyzer_version='1.0.0', # use this IF THIS APP IS A WRAPPER of an existing computational analysis algorithm
+        # analyzer_version='1.0.0', # use this IF THIS APP IS A WRAPPER of an existing computational analysis algorithm
         # (it is very important to pinpoint the primary analyzer version for reproducibility)
         # (for example, when the app's implementation uses ``torch``, it doesn't make the app a "torch-wrapper")
         # (but, when the app doesn't implementaion any additional algorithms/model/architecture, but simply use API's of existing, for exmaple, OCR software, it is a wrapper)
         # if the analyzer is a python app, and it's specified in the requirements.txt
         # this trick can also be useful (replace ANALYZER_NAME with the pypi dist name)
-        analyzer_version=[l.strip().rsplit('==')[-1] for l in open(pathlib.Path(__file__).parent / 'requirements.txt').readlines() if re.match(r'^ANALYZER_NAME==', l)][0],
-        analyzer_license="MIT",  # short name for a software license
+        # analyzer_version=[l.strip().rsplit('==')[-1] for l in open(pathlib.Path(__file__).parent / 'requirements.txt').readlines() if re.match(r'^ANALYZER_NAME==', l)][0],
+        # analyzer_license="MIT",  # short name for a software license
     )
     # and then add I/O specifications: an app must have at least one input and one output
-    metadata.add_input(DocumentTypes.Document)
-    metadata.add_output(AnnotationTypes.Thing, typeSpecificProperty='date-regex')
+    metadata.add_input(DocumentTypes.TextDocument)
+    metadata.add_output(Uri.NE)
     
     # (optional) and finally add runtime parameter specifications
     metadata.add_parameter(
